@@ -120,7 +120,3 @@ GitHub Actions를 통한 자동화:
 - Docker 이미지 빌드
 - 보안 스캔
 - Kubernetes 배포
-
-## 📞 지원
-
-문제가 발생하면 이슈를 생성해 주세요.
