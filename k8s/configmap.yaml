@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: toss-config
+  namespace: toss-system
+data:
+  # Database configuration
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/toss_db"
+  SPRING_DATASOURCE_USERNAME: "toss_user"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
+  
+  # Redis configuration
+  SPRING_REDIS_HOST: "redis-service"
+  SPRING_REDIS_PORT: "6379"
+  
+  # Kafka configuration
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
+  
+  # JWT configuration
+  JWT_SECRET: "mySecretKey123456789012345678901234567890"
+  JWT_ACCESS_TOKEN_EXPIRATION: "3600"
+  JWT_REFRESH_TOKEN_EXPIRATION: "604800"
+  
+  # Service URLs
+  AUTH_SERVICE_URL: "http://auth-service:8080"
+  ACCOUNT_SERVICE_URL: "http://account-service:8080"
+  TRANSACTION_SERVICE_URL: "http://transaction-service:8080"
+  LEDGER_SERVICE_URL: "http://ledger-service:8080"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8080"

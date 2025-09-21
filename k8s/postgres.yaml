@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: toss-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: toss_db
+        - name: POSTGRES_USER
+          value: toss_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: toss-secrets
+              key: SPRING_DATASOURCE_PASSWORD
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: init-script
+        configMap:
+          name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: toss-system
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: toss-system
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: toss-system
+data:
+  init.sql: |
+    -- Initialize Toss database
+    CREATE DATABASE IF NOT EXISTS toss_db;
+    
+    -- Create user
+    CREATE USER IF NOT EXISTS toss_user WITH PASSWORD 'toss_password';
+    
+    -- Grant privileges
+    GRANT ALL PRIVILEGES ON DATABASE toss_db TO toss_user;
+    
+    -- Connect to toss_db
+    \c toss_db;
+    
+    -- Grant schema privileges
+    GRANT ALL ON SCHEMA public TO toss_user;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO toss_user;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO toss_user;
+    
+    -- Set default privileges for future tables
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO toss_user;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO toss_user;
